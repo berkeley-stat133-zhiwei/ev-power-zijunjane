@@ -8,23 +8,61 @@ format: typst
 ## **Part 0: libraries**
 
 ```{r}
-
+library(sf)
+library(rnaturalearth)
+library(maps)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
 ```
 
 ## **Part 1:** **Defining Research Question**
 
-Chosen Question:
+Chosen Question: How has the share of renewable energy changed from 2021–2023 across states? What is the share of electricity that comes from clean sources by state?
 
 ## **Part 2: Data Preparation and Cleaning**
 
 ```{r}
+renew2021 <- read.csv("renew-use-2021.csv")
+renew2022 <- read.csv("renew-use-2022.csv")
+renew2023 <- read.csv("renew-use-2023.csv")
+total2021 <- read.csv("total-use-2021.csv")
+total2022 <- read.csv("total-use-2022.csv")
+total2023 <- read.csv("total-use-2023.csv")
+```
+```{r}
+renew2021 <- renew2021|>
+    mutate(Renewable_Use_2021 = as.numeric(str_extract(Renewable_Use_2021, "\\d+\\.?\\d*")))
+renew2022 <- renew2022|>
+    mutate(Renewable_Use_2022 = as.numeric(str_extract(Renewable_Use_2022, "\\d+\\.?\\d*")))
+renew2023 <- renew2023|>
+    mutate(Renewable_Use_2023 = as.numeric(str_extract(Renewable_Use_2023, "\\d+\\.?\\d*")))
+```
 
+```{r}
+total2021 <- total2021|>
+    mutate(Energy_Source = str_replace_all(Energy_Source, "[^A-Za-z]", ""))
+total2022$Energy_Source <- total2021$Energy_Source
+total2023$Energy_Source <- total2021$Energy_Source
+```
+
+```{r}
+standardize_state <- function(df) {
+  df <- df |>
+    mutate(State = str_to_upper(State))
+  return(df)
+}
+renew2021 <- standardize_state(renew2021)
+renew2022 <- standardize_state(renew2022)
+renew2023 <- standardize_state(renew2023)
 ```
 
 ## **Part 3: Joining / Pivoting Datasets for Analysis**
 
 ```{r}
-
+renew_2 <- full_join(x=renew2021, y=renew2022, by=c("State", "Energy_Source"))
+renew_all <- full_join(x=renew_2, y=renew2023, by=c("State", "Energy_Source"))
 ```
 
 ## **Part 4: Mapping Visualization**
