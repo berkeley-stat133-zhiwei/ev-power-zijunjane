@@ -68,5 +68,20 @@ renew_all <- full_join(x=renew_2, y=renew2023, by=c("State", "Energy_Source"))
 ## **Part 4: Mapping Visualization**
 
 ```{r}
-
+us_states <- ne_states(country = "United States of America", returnclass = "sf")
+renew_state_summary <- renew_all |>
+  group_by(State) |>
+  summarize(Renewable_Use_2021 = sum(Renewable_Use_2021, na.rm = TRUE), Renewable_Use_2023 = sum(Renewable_Use_2023, na.rm = TRUE))
+us_joined <- us_states |>
+  left_join(renew_state_summary, by = join_by(postal == State))|>
+  mutate(Change = Renewable_Use_2023 - Renewable_Use_2021)
+ggplot(us_joined) +
+  geom_sf(aes(fill = Change), color = "white") +
+  scale_fill_distiller(
+    palette = "RdYlGn",
+    direction = 1,
+    name = "Change (2021–2023)")+
+  labs(title = "Change in Renewable Energy Use (2021–2023)") +
+  coord_sf(xlim = c(-125, -66), ylim = c(24, 50), expand = FALSE) +
+  theme_minimal()
 ```
